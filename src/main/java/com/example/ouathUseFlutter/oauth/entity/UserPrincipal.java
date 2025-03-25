@@ -1,11 +1,6 @@
 package com.example.ouathUseFlutter.oauth.entity;
 
-import com.example.ouathUseFlutter.User.entity.User;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import com.example.ouathUseFlutter.User.entity.Users;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,19 +11,19 @@ import java.util.List;
 
 public class UserPrincipal implements UserDetails {
 
-    private final User user;
+    private final Users user;
 
-    public UserPrincipal(User user) {
+    public UserPrincipal(Users user) {
         this.user = user;
     }
 
-    public User getUser() {
+    public Users getUser() {
         return user;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(user.getRole()));
+        return List.of(new SimpleGrantedAuthority(user.getRole().toString()));
     }
 
     @Override
@@ -38,7 +33,7 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getKakaoId();
+        return user.getEmail();
     }
 
     @Override

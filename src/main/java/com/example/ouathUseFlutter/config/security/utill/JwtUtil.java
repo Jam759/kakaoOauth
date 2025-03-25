@@ -119,6 +119,15 @@ public class JwtUtil {
         return null;
     }
 
+    public Date getExpirationFromRefreshToken(String refreshToken){
+        return Jwts.parserBuilder()
+                .setSigningKey(refreshKey)
+                .build()
+                .parseClaimsJws(refreshToken)
+                .getBody()
+                .getExpiration();
+    }
+
 
 
 }

@@ -1,7 +1,7 @@
 package com.example.ouathUseFlutter.config.security.service;
 
 
-import com.example.ouathUseFlutter.User.entity.User;
+import com.example.ouathUseFlutter.User.entity.Users;
 import com.example.ouathUseFlutter.User.repository.UserRepository;
 import com.example.ouathUseFlutter.oauth.entity.UserPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        User user =userRepository.findByuserEmail(email)
+        Users user =userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("user not found : " + email));
 
 

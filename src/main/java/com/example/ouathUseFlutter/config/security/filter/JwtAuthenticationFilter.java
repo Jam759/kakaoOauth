@@ -1,6 +1,5 @@
 package com.example.ouathUseFlutter.config.security.filter;
 
-import com.example.ouathUseFlutter.config.security.service.CustomUserDetailsService;
 import com.example.ouathUseFlutter.config.security.utill.JwtUtil;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
@@ -30,27 +29,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 1. 요청 헤더에서 Authorization 추출
         String authHeader = request.getHeader("Authorization");
+        System.out.println("[JWT] Authorization header: " + authHeader);
 
         // 2. 헤더가 없거나 형식이 잘못됐으면 다음 필터로 넘김
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("[JWT] Missing or invalid Authorization header");
             filterChain.doFilter(request, response);
             return;
         }
 
         // 3. "Bearer " 다음의 실제 JWT만 추출
         String token = authHeader.substring(7);
+        System.out.println("[JWT] Extracted token: " + token);
 
         // 4. 토큰 타입 추출 (access / refresh / null)
         String tokenType = getTokenType(token);
+        System.out.println("[JWT] Token type: " + tokenType);
 
         // 5. Kakao Token 또는 알 수 없는 토큰 → 무시하고 필터 통과
         if (tokenType == null) {
+            System.out.println("[JWT] Unrecognized or invalid token, skipping authentication");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 6. Refresh Token은 인증에 사용하지 않음 (재발급용이므로 건너뜀)
+        // 6. Refresh Token은 인증에 사용하지 않음
         if ("refresh".equals(tokenType)) {
+            System.out.println("[JWT] Refresh token detected, skipping authentication");
             filterChain.doFilter(request, response);
             return;
         }
@@ -58,6 +63,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 7. Access Token 유효성 검사 후 인증 처리
         if ("access".equals(tokenType) && jwtUtil.validateAccessToken(token)) {
             String username = jwtUtil.getUsernameFromAccessToken(token);
+            System.out.println("[JWT] Access token valid for user: " + username);
+
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
             UsernamePasswordAuthenticationToken authentication =
@@ -68,11 +75,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            System.out.println("[Security] Authentication set for user: " + authentication.getName());
+        } else {
+            System.out.println("[JWT] Invalid access token");
         }
 
         // 8. 다음 필터로 요청 넘기기
         filterChain.doFilter(request, response);
     }
+
+
 
 
     // JwtUtil 내부 claim에서 tokenType 추출하는 메서드 구현

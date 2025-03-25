@@ -6,12 +6,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class KakaoUserInfo {
+
     private Long id; // 카카오 고유 ID
     private KakaoAccount kakao_account;
 
     @Getter
     @Setter
     public static class KakaoAccount {
+
         private String email;
         private String birthyear; // 생년
         private String birthday;  // 월일
@@ -40,13 +42,8 @@ public class KakaoUserInfo {
         return kakao_account != null ? kakao_account.getEmail() : null;
     }
 
-    public String getBirth() {
-        if (kakao_account != null) {
-            String year = kakao_account.getBirthyear();
-            String day = kakao_account.getBirthday();
-            return (year != null && day != null) ? year + "-" + day.substring(0, 2) + "-" + day.substring(2) : null;
-        }
-        return null;
-    }
+    public String getBirthYear() { return kakao_account.getBirthyear(); }
+
+    public String getBirthDay() { return kakao_account.getBirthday(); }
 }
 

@@ -8,7 +8,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    public WebClient webClient() {
-        return WebClient.builder().build();
+    public WebClient kakaoWebClient(WebClient.Builder builder) {
+        return builder
+                .baseUrl("https://kapi.kakao.com") // ✅ 반드시 있어야 함!
+                .build();
     }
 }
