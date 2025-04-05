@@ -31,10 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
         System.out.println("[JWT] Authorization header: " + authHeader);
 
-        // 2. 헤더가 없거나 형식이 잘못됐으면 다음 필터로 넘김
+        // 2. 헤더가 없거나 형식이 잘못됐으면 인증 실패 처리
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             System.out.println("[JWT] Missing or invalid Authorization header");
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Missing or invalid Authorization header\"}");
             return;
         }
 
@@ -46,22 +48,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String tokenType = getTokenType(token);
         System.out.println("[JWT] Token type: " + tokenType);
 
-        // 5. Kakao Token 또는 알 수 없는 토큰 → 무시하고 필터 통과
-        if (tokenType == null) {
-            System.out.println("[JWT] Unrecognized or invalid token, skipping authentication");
-            filterChain.doFilter(request, response);
+        // 5. Access Token이 아닌 경우 → 인증 실패 처리
+        if (!"access".equals(tokenType)) {
+            System.out.println("[JWT] Non-access token detected (refresh or unknown)");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Only access tokens are allowed for authentication\"}");
             return;
         }
 
-        // 6. Refresh Token은 인증에 사용하지 않음
-        if ("refresh".equals(tokenType)) {
-            System.out.println("[JWT] Refresh token detected, skipping authentication");
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // 7. Access Token 유효성 검사 후 인증 처리
-        if ("access".equals(tokenType) && jwtUtil.validateAccessToken(token)) {
+        // 6. Access Token 유효성 검사
+        if (jwtUtil.validateAccessToken(token)) {
             String username = jwtUtil.getUsernameFromAccessToken(token);
             System.out.println("[JWT] Access token valid for user: " + username);
 
@@ -76,13 +73,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             System.out.println("[Security] Authentication set for user: " + authentication.getName());
-        } else {
-            System.out.println("[JWT] Invalid access token");
-        }
 
-        // 8. 다음 필터로 요청 넘기기
-        filterChain.doFilter(request, response);
+            // ✅ 인증 성공 시 필터 체인 계속 진행
+            filterChain.doFilter(request, response);
+        } else {
+            // ❌ Access 토큰이지만 유효하지 않은 경우
+            System.out.println("[JWT] Invalid access token - returning 401");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Invalid or expired access token\"}");
+        }
     }
+
+
 
 
 
